@@ -17,9 +17,9 @@ const toolGroups = [
     image: '/billqrnow-counter.webp',
     alt: 'A small Indian shopkeeper preparing a customer payment request at the counter',
     links: [
-      ['upi-qr-code-generator', 'Dynamic UPI payment QR'],
-      ['gst-invoice-generator', 'GST tax invoice'],
-      ['quotation-maker-online', 'Quotation and estimate'],
+      { slug: 'upi-qr-code-generator', label: 'Dynamic UPI payment QR', description: 'Fix an amount and share a ready-to-scan payment link.' },
+      { slug: 'gst-invoice-generator', label: 'GST tax invoice', description: 'Create an invoice with automatic CGST, SGST or IGST.' },
+      { slug: 'quotation-maker-online', label: 'Quotation and estimate', description: 'Send a clear quote before the work begins.' },
     ],
   },
   {
@@ -27,9 +27,9 @@ const toolGroups = [
     image: '/billqrnow-hr-desk.webp',
     alt: 'Rent receipts and workplace documents arranged on a desk',
     links: [
-      ['hra-rent-receipt-generator', 'HRA rent receipts'],
-      ['salary-slip-generator', 'Salary slip'],
-      ['experience-certificate-format-generator', 'Experience certificate'],
+      { slug: 'hra-rent-receipt-generator', label: 'HRA rent receipts', description: 'Prepare receipts for all 12 months in one batch.' },
+      { slug: 'salary-slip-generator', label: 'Salary slip', description: 'Build a clean monthly payroll PDF.' },
+      { slug: 'experience-certificate-format-generator', label: 'Experience certificate', description: 'Create a ready-to-edit employee letter.' },
     ],
   },
   {
@@ -37,9 +37,9 @@ const toolGroups = [
     image: '/billqrnow-shipping-desk.webp',
     alt: 'A parcel and shipping paperwork ready for an international shipment',
     links: [
-      ['us/commercial-invoice-generator', 'Commercial invoice'],
-      ['us/packing-list-generator', 'Packing list'],
-      ['us/1099-contractor-invoice-generator', '1099 contractor invoice'],
+      { slug: 'us/commercial-invoice-generator', label: 'Commercial invoice', description: 'Add HS codes, origin country and Incoterms.' },
+      { slug: 'us/packing-list-generator', label: 'Packing list', description: 'List package contents, quantities and weights.' },
+      { slug: 'us/1099-contractor-invoice-generator', label: '1099 contractor invoice', description: 'Make a contractor invoice with pay-by QR.' },
     ],
   },
 ];
@@ -95,9 +95,15 @@ const toolGroups = [
             <img src={group.image} alt={group.alt} width="1200" height="800" loading="lazy" decoding="async" />
             <div class="library-card-copy">
               <h3>{group.title}</h3>
-              {group.links.map(([slug, label]) => (
-                <a href={`/${slug}`}>{label}<span aria-hidden="true">↗</span></a>
+              <div class="library-tool-list">
+                {group.links.map((tool) => (
+                <a class="library-tool" href={`/${tool.slug}`}>
+                  <strong>{tool.label}</strong>
+                  <small>{tool.description}</small>
+                  <span class="tool-arrow" aria-hidden="true">↗</span>
+                </a>
               ))}
+              </div>
             </div>
           </article>
         ))}

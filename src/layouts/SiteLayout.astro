@@ -5,7 +5,30 @@ const { title, description, path='/' } = Astro.props;
 const canonical = `${siteUrl}${path}`;
 ---
 <!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#f6f8f4"/><meta name="description" content={description}/><link rel="canonical" href={canonical}/><link rel="icon" type="image/png" sizes="128x128" href="/favicon.png"/><title>{title}</title></head><body>
-<header class="site-header"><a class="wordmark" href="/" aria-label="BillQRNow home"><img class="wordmark-icon" src="/favicon.png" alt="" width="32" height="32"/>BillQRNow</a><nav><a href="/all-tools">All tools</a><a href="/about">About</a><a href="/privacy">Privacy</a><a class="nav-action" href="/upi-qr-code-generator">Create a QR</a></nav></header>
+<header class="site-header">
+  <a class="wordmark" href="/" aria-label="BillQRNow home"><img class="wordmark-icon" src="/favicon.png" alt="" width="32" height="32" />BillQRNow</a>
+  <nav class="desktop-nav" aria-label="Main navigation">
+    <a href="/upi-qr-code-generator">UPI QR</a>
+    <a href="/gst-invoice-generator">GST invoices</a>
+    <a href="/hra-rent-receipt-generator">Rent receipts</a>
+    <a href="/us/commercial-invoice-generator">US &amp; global</a>
+    <a href="/all-tools">All tools</a>
+  </nav>
+  <div class="header-actions">
+    <details class="mobile-nav">
+      <summary aria-label="Open navigation"><span></span><span></span><span></span></summary>
+      <nav aria-label="Mobile navigation">
+        <a href="/upi-qr-code-generator">UPI QR generator</a>
+        <a href="/gst-invoice-generator">GST invoice generator</a>
+        <a href="/hra-rent-receipt-generator">HRA rent receipts</a>
+        <a href="/salary-slip-generator">Salary slip generator</a>
+        <a href="/us/commercial-invoice-generator">US &amp; global trade</a>
+        <a href="/all-tools">Browse all tools</a>
+      </nav>
+    </details>
+    <a class="nav-action" href="/upi-qr-code-generator">Create a QR <span aria-hidden="true">↗</span></a>
+  </div>
+</header>
 <slot />
 <footer class="site-footer"><div class="footer-main"><a class="wordmark" href="/"><img class="wordmark-icon" src="/favicon.png" alt="" width="32" height="32"/>BillQRNow</a><p>Practical billing documents, created privately in your browser.</p></div><div class="footer-links"><a href="/all-tools">All tools</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div><small>© 2026 BillQRNow</small></footer>
 </body></html>
