@@ -49,6 +49,7 @@ describe('built SEO and privacy surface',()=>{
     expect(benefit.filter(word=>primary.has(word)),`${page}: ${title}`).toEqual([]);
    }
   }
+  expect(decodeEntities(attr(text(outputFor('/us/rent-receipt-generator-us')),/<title>(.*?)<\/title>/i))).toBe('US Rent Receipt Generator (Free, No Login) | BillQRNow');
  });
  it('has no broken root-relative internal links across built pages',()=>{const broken:string[]=[];for(const file of files){const html=text(file);for(const match of html.matchAll(/<a\b[^>]*\bhref="(\/[^"#]*)"/gi)){const href=match[1];if(!existsSync(outputFor(href)))broken.push(`${relative(dist,file)} -> ${href}`);}}expect(broken).toEqual([]);});
  it('does not render forms that post financial data to a remote server',()=>{for(const file of files){const html=text(file);for(const match of html.matchAll(/<form\b([^>]*)>/gi)){const attrs=match[1];expect(attrs).not.toMatch(/method=["']?post/i);expect(attrs).not.toMatch(/action=["']https?:\/\//i);}}});

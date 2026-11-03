@@ -57,6 +57,7 @@ const makeSeoTitle = (slug: string) => {
   };
   const isUsRoute = slug.startsWith('us/');
   const words = slug.replace(/^us\//, '').split('-').filter(Boolean);
+  if (isUsRoute && words[words.length - 1] === 'us') words.pop();
   const removable = ['international', 'independent', 'personal', 'commercial', 'business', 'generator', 'maker', 'format', 'online', 'template', 'pdf'];
   const render = () => words.map(word => acronyms[word] || `${word[0].toUpperCase()}${word.slice(1)}`).join(' ');
   const suffix = ' (Free, No Login) | BillQRNow';
