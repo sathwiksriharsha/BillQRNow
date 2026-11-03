@@ -14,32 +14,35 @@ const quick = [
 const toolGroups = [
   {
     title: 'India billing & payments',
+    label: 'PAYMENTS & TAX',
     image: '/billqrnow-counter.webp',
     alt: 'A small Indian shopkeeper preparing a customer payment request at the counter',
+    primary: { slug: 'upi-qr-code-generator', label: 'Dynamic UPI payment QR', description: 'Fix the amount, then share a ready-to-scan payment link.' },
     links: [
-      { slug: 'upi-qr-code-generator', label: 'Dynamic UPI payment QR', description: 'Fix an amount and share a ready-to-scan payment link.' },
-      { slug: 'gst-invoice-generator', label: 'GST tax invoice', description: 'Create an invoice with automatic CGST, SGST or IGST.' },
-      { slug: 'quotation-maker-online', label: 'Quotation and estimate', description: 'Send a clear quote before the work begins.' },
+      { slug: 'gst-invoice-generator', label: 'GST tax invoice', description: 'Automatic CGST, SGST or IGST.' },
+      { slug: 'quotation-maker-online', label: 'Quotation and estimate', description: 'Send a clear quote before work begins.' },
     ],
   },
   {
     title: 'People & workplace',
+    label: 'PEOPLE & PAYROLL',
     image: '/billqrnow-hr-desk.webp',
     alt: 'Rent receipts and workplace documents arranged on a desk',
+    primary: { slug: 'hra-rent-receipt-generator', label: 'HRA rent receipts', description: 'Prepare all 12 months in one batch.' },
     links: [
-      { slug: 'hra-rent-receipt-generator', label: 'HRA rent receipts', description: 'Prepare receipts for all 12 months in one batch.' },
-      { slug: 'salary-slip-generator', label: 'Salary slip', description: 'Build a clean monthly payroll PDF.' },
-      { slug: 'experience-certificate-format-generator', label: 'Experience certificate', description: 'Create a ready-to-edit employee letter.' },
+      { slug: 'salary-slip-generator', label: 'Salary slip', description: 'A clean monthly payroll PDF.' },
+      { slug: 'experience-certificate-format-generator', label: 'Experience certificate', description: 'A ready-to-edit employee letter.' },
     ],
   },
   {
     title: 'US & global trade',
+    label: 'EXPORTS & CONTRACTORS',
     image: '/billqrnow-shipping-desk.webp',
     alt: 'A parcel and shipping paperwork ready for an international shipment',
+    primary: { slug: 'us/commercial-invoice-generator', label: 'Commercial invoice', description: 'Add HS codes, origin country and Incoterms.' },
     links: [
-      { slug: 'us/commercial-invoice-generator', label: 'Commercial invoice', description: 'Add HS codes, origin country and Incoterms.' },
-      { slug: 'us/packing-list-generator', label: 'Packing list', description: 'List package contents, quantities and weights.' },
-      { slug: 'us/1099-contractor-invoice-generator', label: '1099 contractor invoice', description: 'Make a contractor invoice with pay-by QR.' },
+      { slug: 'us/packing-list-generator', label: 'Packing list', description: 'Package contents, quantities and weights.' },
+      { slug: 'us/1099-contractor-invoice-generator', label: '1099 contractor invoice', description: 'Contractor billing with pay-by QR.' },
     ],
   },
 ];
@@ -89,20 +92,27 @@ const toolGroups = [
         <h2 id="tool-groups-title">Useful tools for everyday business.</h2>
         <p>From a customer’s first payment to an international shipment, build the documents that keep work moving.</p>
       </div>
-      <div class="library-columns">
-        {toolGroups.map((group) => (
-          <article class="library-card">
-            <img src={group.image} alt={group.alt} width="1200" height="800" loading="lazy" decoding="async" />
+      <div class="library-showcase">
+        {toolGroups.map((group, index) => (
+          <article class:list={['library-card', index === 0 ? 'library-card--feature' : 'library-card--compact']}>
+            <div class="library-image">
+              <img src={group.image} alt={group.alt} width="1200" height="800" loading="lazy" decoding="async" />
+              <span class="library-image-index">{group.label}</span>
+            </div>
             <div class="library-card-copy">
               <h3>{group.title}</h3>
-              <div class="library-tool-list">
+              <a class="library-primary" href={`/${group.primary.slug}`}>
+                <strong>{group.primary.label}</strong>
+                <small>{group.primary.description}</small>
+                <span class="library-primary-arrow" aria-hidden="true">↗</span>
+              </a>
+              <div class="library-related-tools">
                 {group.links.map((tool) => (
-                <a class="library-tool" href={`/${tool.slug}`}>
-                  <strong>{tool.label}</strong>
-                  <small>{tool.description}</small>
-                  <span class="tool-arrow" aria-hidden="true">↗</span>
-                </a>
-              ))}
+                  <a class="library-related-tool" href={`/${tool.slug}`}>
+                    <span class="library-related-copy"><strong>{tool.label}</strong><small>{tool.description}</small></span>
+                    <span class="library-related-arrow" aria-hidden="true">↗</span>
+                  </a>
+                ))}
               </div>
             </div>
           </article>
