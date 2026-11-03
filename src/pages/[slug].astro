@@ -1,0 +1,8 @@
+---
+import ToolPage from '../components/ToolPage.astro';
+import { routes, getRoute } from '../data/routes';
+export function getStaticPaths(){return routes.filter(r=>!r.slug.startsWith('us/')).map(r=>({params:{slug:r.slug},props:{page:r}}));}
+const page = Astro.props.page || getRoute(Astro.params.slug || '');
+if (!page) throw new Error('Unknown tool route');
+---
+<ToolPage page={page}/>

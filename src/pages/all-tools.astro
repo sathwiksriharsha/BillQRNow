@@ -1,0 +1,4 @@
+---
+import ContentPage from '../components/ContentPage.astro'; import {corePages,routes} from '../data/routes'; const page=corePages.find(p=>p.slug==='all-tools');
+---
+<ContentPage page={page} routes={routes}/>

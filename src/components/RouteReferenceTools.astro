@@ -1,0 +1,10 @@
+---
+import {stateCodes} from '../utils/gstEngine';
+const {slug}=Astro.props as {slug:string};
+---
+{slug==='gst-state-code-hsn-lookup'&&<section class="reference-section"><div><span class="eyebrow">GST quick reference</span><h2>State and territory GSTIN codes</h2><p>The first two characters of a GSTIN identify the registration state. Common HSN/SAC examples follow the code list.</p></div><div class="reference-grid">{Object.entries(stateCodes).map(([code,name])=><div><b>{code}</b><span>{name}</span></div>)}</div><h3>Common HSN / SAC examples</h3><div class="reference-grid hsn-grid"><div><b>480256</b><span>Uncoated paper and paperboard</span></div><div><b>392610</b><span>Office or school supplies of plastics</span></div><div><b>998314</b><span>Information technology design and development services</span></div><div><b>996511</b><span>Road transport services for goods</span></div></div></section>}
+{slug==='number-to-words-rupees-converter'&&<section class="converter-section"><div><span class="eyebrow">Indian currency helper</span><h2>Convert rupees to words</h2><label>Amount in rupees<input type="number" min="0" step="0.01" value="145250" data-words-amount /></label><p data-words-output>Rupees One Lakh Forty-Five Thousand Two Hundred Fifty Only</p></div></section>}
+<script>
+import {amountToIndianWords} from '../utils/gstEngine';
+document.querySelectorAll<HTMLInputElement>('[data-words-amount]').forEach(input=>input.addEventListener('input',()=>{const output=document.querySelector<HTMLElement>('[data-words-output]');if(output){try{output.textContent=amountToIndianWords(Number(input.value)||0);}catch(error){output.textContent=error instanceof Error?error.message:'Enter an amount.';}}}));
+</script>

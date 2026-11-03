@@ -1,0 +1,17 @@
+---
+import type { RoutePage } from '../data/routes';
+import WorkbenchFields from './WorkbenchFields.astro';
+const { page } = Astro.props as { page: RoutePage };
+---
+<section class="workbench" data-workbench data-mode={page.mode} data-slug={page.slug} data-title={page.headline} aria-label="Interactive document workbench">
+  <div class="workbench-top"><div><span class="eyebrow">Your document studio</span><h2>Make it yours</h2><p>Everything stays on this device. Your details are never uploaded.</p></div><button class="sample-button" type="button" data-sample>⚡ Load Sample Data</button></div>
+  <div class="studio-grid">
+    <form class="editor" data-editor onsubmit="return false"><div class="editor-heading"><h3>Document details</h3><span>Live preview</span></div><WorkbenchFields mode={page.mode} slug={page.slug}/><div class="export-actions" data-exports><button class="button-primary" type="button" data-export>{page.mode==='payment-qr'?'Download Invoice PDF':'Download PDF'}</button>{page.mode==='us-customs-b2b'&&<><button type="button" class="button-secondary" data-export="packing">Packing list PDF</button><button type="button" class="button-secondary" data-export="combined">Combined 2-page PDF</button></>}</div><p class="form-message" data-message aria-live="polite"></p></form>
+    <aside class="preview-panel"><div class="preview-head"><span>LIVE DOCUMENT</span><span class="live-dot">● Local</span></div>
+      {page.mode==='upi-qr'||page.mode==='payment-qr'?<div class="standee" data-standee><span class="standee-brand" data-preview="business">Your business</span><h3>Scan to pay</h3><canvas data-qr width="640" height="640" aria-label="Payment QR code"></canvas><strong data-preview-amount>₹0.00</strong><span data-preview="vpa">yourname@bank</span><small data-preview="reference">Payment reference</small><div class="preview-controls"><button type="button" class="button-primary" data-download-png>Download Standee PNG</button><button type="button" class="button-secondary" data-copy-link>Copy Payment Link</button></div></div>:<div class="paper-preview"><span class="paper-mark">BILLQRNOW</span><h3 data-document-title>{page.mode==='gst-invoice'?'TAX INVOICE':page.mode==='hra-rent'?'RENT RECEIPT':page.mode==='us-customs-b2b'?'COMMERCIAL INVOICE':page.mode==='late-fee'?'LATE FEE NOTICE':page.mode==='hr-docs'&&!['salary-slip-generator','us/1099-contractor-invoice-generator'].includes(page.slug)?page.headline:'PAY SLIP'}</h3><p data-summary>Fill the form or load sample data to preview this document.</p><div class="paper-lines"></div><div class="paper-total"><span>Amount due</span><strong data-total>—</strong></div><canvas data-qr class="small-qr" width="120" height="120" hidden></canvas></div>}
+      <div class="privacy-note"><span>◎</span><p>Private by design. Files are created in your browser and never sent to a server.</p></div>
+    </aside>
+  </div>
+</section>
+<script>import "../scripts/workbench";</script>
+

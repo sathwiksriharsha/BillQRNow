@@ -1,0 +1,6 @@
+---
+import ToolPage from '../../components/ToolPage.astro';
+import { routes } from '../../data/routes';
+export function getStaticPaths(){return routes.filter(r=>r.slug.startsWith('us/')).map(r=>({params:{slug:r.slug.slice(3)},props:{page:r}}));}
+---
+<ToolPage page={Astro.props.page}/>
