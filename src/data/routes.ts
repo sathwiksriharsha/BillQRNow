@@ -44,7 +44,8 @@ const makeSeoTitle = (slug: string) => {
     'us/uk-vat-invoice-generator': 'UK VAT Invoice Generator (Free PDF) | BillQRNow',
     'us/canada-gst-hst-invoice-generator': 'Canada GST/HST Invoice Generator (Free PDF) | BillQRNow',
     'us/australia-tax-invoice-abn-generator': 'Australia ABN Tax Invoice Generator (Free PDF) | BillQRNow',
-    'us/eu-reverse-charge-b2b-invoice': 'EU Reverse Charge VAT Invoice (Free PDF) | BillQRNow'
+    'us/eu-reverse-charge-b2b-invoice': 'EU Reverse Charge VAT Invoice (Free PDF) | BillQRNow',
+    'no-objection-certificate-noc-generator': 'No Objection Certificate NOC (Free PDF) | BillQRNow'
   };
   if (custom[slug]) return custom[slug];
 

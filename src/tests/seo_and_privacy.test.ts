@@ -31,17 +31,21 @@ describe('built SEO and privacy surface',()=>{
  });
  it('keeps every title within 75 characters and avoids repeated benefit words',()=>{
   for(const file of files){
-   const title=attr(text(file),/<title>(.*?)<\/title>/i),page=relative(dist,file);
+   const title=decodeEntities(attr(text(file),/<title>(.*?)<\/title>/i)),page=relative(dist,file);
    expect(title.length,`${page}: ${title}`).toBeLessThanOrEqual(75);
    expect(title, page).toMatch(/\| BillQRNow$/);
    expect(title).not.toMatch(/Amount Fixed\s+—\s+Amount Fixed/i);
    expect(title).not.toMatch(/UPI QR Code\s+—\s+Embedded UPI QR/i);
-   const noBrand=title.replace(/\s*\| BillQRNow$/,'').replace(/\s*\(Free, No Login\)$/,'');
-   const split=noBrand.split(' — ');
+   const noBrand=title.replace(/\s*\| BillQRNow$/,'');
+   const offer=noBrand.match(/\s+\((Free, No Login|Free PDF)\)$/i)?.[1]||'';
+   const core=offer?noBrand.replace(/\s+\((Free, No Login|Free PDF)\)$/i,''):noBrand;
+   const split=core.split(' — ');
+   const primaryText=split[0];
+   const tokens=(part:string)=>part.toLowerCase().match(/[a-z0-9]+/g)||[];
+   if(offer)expect(tokens(offer).filter(word=>tokens(primaryText).includes(word)),`${page}: ${title} offer`).toEqual([]);
    if(split.length===2){
-    const words=(part:string)=>part.toLowerCase().match(/[a-z0-9]+/g)||[];
-    const primary=new Set(words(split[0]));
-    const benefit=words(split[1]);
+    const primary=new Set(tokens(split[0]));
+    const benefit=tokens(split[1]);
     expect(benefit.filter(word=>primary.has(word)),`${page}: ${title}`).toEqual([]);
    }
   }
