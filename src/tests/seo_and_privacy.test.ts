@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync,readdirSync,existsSync} from 'node:fs';
 import {join,relative,sep} from 'node:path';
-import {routes} from '../data/routes';
+import {routes,relatedFor} from '../data/routes';
 const dist=join(process.cwd(),'dist');
 function htmlFiles(dir:string):string[]{return readdirSync(dir,{withFileTypes:true}).flatMap(entry=>{const path=join(dir,entry.name);return entry.isDirectory()?htmlFiles(path):entry.name.endsWith('.html')?[path]:[];});}
 const files=existsSync(dist)?htmlFiles(dist):[];
@@ -14,4 +14,93 @@ describe('built SEO and privacy surface',()=>{
  it('uses unique titles, descriptions, canonicals, and exactly one H1 on every page',()=>{const titles:string[]=[],descriptions:string[]=[];for(const file of files){const html=text(file);titles.push(attr(html,/<title>(.*?)<\/title>/i));descriptions.push(attr(html,/<meta\s+name="description"\s+content="([^"]*)"/i));const canon=attr(html,/<link\s+rel="canonical"\s+href="([^"]*)"/i);expect(canon).toMatch(/^https:\/\/billqrnow\.pages\.dev\//);expect((html.match(/<h1(?:\s[^>]*)?>/gi)||[]).length,relative(dist,file)).toBe(1);}expect(titles.every(Boolean)).toBe(true);expect(descriptions.every(Boolean)).toBe(true);expect(new Set(titles).size).toBe(files.length);expect(new Set(descriptions).size).toBe(files.length);});
  it('has no broken root-relative internal links across built pages',()=>{const broken:string[]=[];for(const file of files){const html=text(file);for(const match of html.matchAll(/<a\b[^>]*\bhref="(\/[^"#]*)"/gi)){const href=match[1];if(!existsSync(outputFor(href)))broken.push(`${relative(dist,file)} -> ${href}`);}}expect(broken).toEqual([]);});
  it('does not render forms that post financial data to a remote server',()=>{for(const file of files){const html=text(file);for(const match of html.matchAll(/<form\b([^>]*)>/gi)){const attrs=match[1];expect(attrs).not.toMatch(/method=["']?post/i);expect(attrs).not.toMatch(/action=["']https?:\/\//i);}}});
+ it('renders route-specific compliance tables, four FAQs, and valid SoftwareApplication, FAQPage, and BreadcrumbList JSON-LD',()=>{
+  for(const route of routes){
+   const html=text(outputFor(`/${route.slug}`));
+   expect(html,route.slug).toContain(`data-route-compliance="${route.slug}"`);
+   const compliance=html.match(/<table[^>]*data-route-compliance[^>]*>([\s\S]*?)<\/table>/i)?.[1]||'';
+   expect((compliance.match(/<tr\b/gi)||[]).length,`${route.slug} compliance rows`).toBe(5);
+   expect((html.match(/data-faq-item=/g)||[]).length,`${route.slug} FAQ count`).toBe(4);
+   const schemas=[...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/gi)].map(match=>JSON.parse(match[1]));
+   expect(schemas.map(schema=>schema['@type'])).toEqual(expect.arrayContaining(['SoftwareApplication','FAQPage','BreadcrumbList']));
+   const app=schemas.find(schema=>schema['@type']==='SoftwareApplication');
+   const faq=schemas.find(schema=>schema['@type']==='FAQPage');
+   const breadcrumb=schemas.find(schema=>schema['@type']==='BreadcrumbList');
+   expect(app.offers.price).toBe('0.00');
+   expect(app.offers.priceCurrency).toBe('INR');
+   expect(faq.mainEntity).toHaveLength(4);
+   expect(breadcrumb.itemListElement).toHaveLength(3);
+   expect(html).toContain(`data-related-tools="${route.slug}"`);
+   expect(html).toContain('Load Sample Data');
+  }
+ });
+ it('keeps compliance tables distinct and related links inside the matching document silo',()=>{
+  const complianceBodies:string[]=[];
+  for(const route of routes){
+   const html=text(outputFor(`/${route.slug}`));
+   const body=html.match(/<tbody>([\s\S]*?)<\/tbody>/i)?.[1]||'';
+   expect((body.match(/<tr\b/gi)||[]).length,`${route.slug} table rows`).toBe(4);
+   complianceBodies.push(body);
+   const section=html.match(/<section[^>]*data-related-tools="[^"]+"[^>]*>([\s\S]*?)<\/section>/i)?.[1]||'';
+   const hrefs=[...section.matchAll(/<a\b[^>]*href="\/([^\"]+)"/gi)].map(match=>match[1]);
+   expect(hrefs.length,`${route.slug} related links`).toBeGreaterThan(0);
+   expect(hrefs.sort()).toEqual(relatedFor(route).map(related=>related.slug).sort());
+  }
+  expect(new Set(complianceBodies).size, 'route-specific compliance table bodies').toBe(routes.length);
+ });
+ it('links regional tax, customs, HR, GST, and payment tools to contextually related routes',()=>{
+  const relatedSlugs=(slug:string)=>relatedFor(routes.find(route=>route.slug===slug)! ).map(route=>route.slug);
+  expect(relatedSlugs('us/uk-vat-invoice-generator')).toContain('us/canada-gst-hst-invoice-generator');
+  expect(relatedSlugs('us/uk-vat-invoice-generator')).not.toContain('us/commercial-invoice-generator');
+  expect(relatedSlugs('us/commercial-invoice-generator')).not.toContain('upi-qr-code-generator');
+  expect(relatedSlugs('experience-certificate-format-generator')).not.toContain('us/commercial-invoice-generator');
+  expect(relatedSlugs('transport-bilty-lr-generator')).toContain('gst-invoice-generator');
+  expect(relatedSlugs('upi-qr-code-generator')).toContain('upi-payment-link-generator');
+ });
+ it('uses current official reference rates for jewellery and Canada compliance tables',()=>{
+  const jewellery=text(outputFor('/jewellery-gst-invoice-generator'));
+  expect(jewellery).toContain('3% on the total transaction value');
+  expect(jewellery).toContain('Qualifying jewellery job-work charges are generally taxed at 5%');
+  const canada=text(outputFor('/us/canada-gst-hst-invoice-generator'));
+  expect(canada).toContain('Nova Scotia is 14% from April 1, 2025');
+ });
+ it('uses the high-CTR title pattern and renders all eight UPI handles and client-side image inputs',()=>{
+  for(const file of files){const html=text(file),title=attr(html,/<title>(.*?)<\/title>/i);expect(title,relative(dist,file)).toContain(' — ');expect(title).toContain('(Free, No Login) | BillQRNow');}
+  for(const route of routes){const html=text(outputFor(`/${route.slug}`));expect(html).toContain('data-key="logoFile"');expect(html).toContain('data-key="signatureFile"');}
+  const upi=text(outputFor('/upi-qr-code-generator'));
+  for(const handle of ['@okaxis','@okicici','@okhdfcbank','@oksbi','@ybl','@paytm','@ibl','@upi'])expect(upi).toContain(`data-handle="${handle}"`);
+  expect(text(join(dist,'index.html')).indexOf('quick-switch')).toBeLessThan(text(join(dist,'index.html')).indexOf('home-hero'));
+  expect(text(outputFor('/upi-qr-code-generator'))).toContain('rel="icon"');
+  expect(existsSync(join(dist,'favicon.png'))).toBe(true);
+  const directory=text(outputFor('/all-tools'));
+  for(const route of routes)expect(directory,route.slug).toContain(`href="/${route.slug}"`);
+ });
+ it('renders unique DOM fields for jewellery, pharmacy, transport, and formal HR letter archetypes',()=>{
+  const cases:[string,string[]][]=[
+   ['jewellery-gst-invoice-generator',['metalPurity','grossWeight','netWeight','ratePerGram','makingCharges']],
+   ['medical-pharmacy-bill-generator',['medicineName','batchNumber','expiryDate','doctorName','drugLicense']],
+   ['transport-bilty-lr-generator',['truckNo','ewayBillNo','fromCity','toCity','freightStatus','copySet']],
+   ['experience-certificate-format-generator',['employeeName','designation','joinDate','lastWorkingDate','letterBody']],
+   ['relieving-letter-generator',['employeeName','designation','joinDate','lastWorkingDate','letterBody']],
+   ['no-objection-certificate-noc-generator',['employeeName','designation','joinDate','lastWorkingDate','letterBody']]
+  ];
+  for(const [slug,keys] of cases){const html=text(outputFor(`/${slug}`));for(const key of keys)expect(html,`${slug} ${key}`).toContain(`data-key="${key}"`);}
+ });
+ it('uses the local currency on UK, Canada, Australia, and EU invoice routes',()=>{
+  const cases:[string,string][]=[
+   ['us/uk-vat-invoice-generator','GBP'],
+   ['us/canada-gst-hst-invoice-generator','CAD'],
+   ['us/australia-tax-invoice-abn-generator','AUD'],
+   ['us/eu-reverse-charge-b2b-invoice','EUR']
+  ];
+  for(const [slug,currency] of cases){const html=text(outputFor(`/${slug}`));expect(html,slug).toContain(`data-currency="${currency}"`);expect(html,slug).toContain(`Unit price (${currency})`);expect(html,slug).toContain('data-key="sellerTaxId"');expect(html,slug).toContain('data-key="buyerTaxId"');expect(html,slug).toContain('data-key="items"');}
+ });
+ it('keeps the QR canvas bounded by its preview card and applies responsive workbench ordering',()=>{
+  const styles=readdirSync(join(dist,'_astro')).filter(name=>name.endsWith('.css')).map(name=>text(join(dist,'_astro',name))).join('\n');
+  expect(styles).toMatch(/\.standee canvas\{[^}]*max-width\s*:\s*100%/);
+  expect(styles).toMatch(/\.standee\{[^}]*overflow\s*:\s*hidden/);
+  expect(styles).toMatch(/\.tool-hero\{[^}]*min-height\s*:\s*0/);
+  expect(styles).toContain('.tool-hero{min-height:0;padding:16px 32px 14px}');
+  expect(styles).toContain('.workbench{margin-top:18px}');
+ });
 });

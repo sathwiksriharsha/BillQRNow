@@ -1,5 +1,10 @@
 export const stateCodes: Record<string,string> = {'01':'Jammu and Kashmir','02':'Himachal Pradesh','03':'Punjab','04':'Chandigarh','05':'Uttarakhand','06':'Haryana','07':'Delhi','08':'Rajasthan','09':'Uttar Pradesh','10':'Bihar','11':'Sikkim','12':'Arunachal Pradesh','13':'Nagaland','14':'Manipur','15':'Mizoram','16':'Tripura','17':'Meghalaya','18':'Assam','19':'West Bengal','20':'Jharkhand','21':'Odisha','22':'Chhattisgarh','23':'Madhya Pradesh','24':'Gujarat','25':'Daman and Diu (legacy)','26':'Dadra and Nagar Haveli and Daman and Diu','27':'Maharashtra','28':'Andhra Pradesh (old)','29':'Karnataka','30':'Goa','31':'Lakshadweep','32':'Kerala','33':'Tamil Nadu','34':'Puducherry','35':'Andaman and Nicobar Islands','36':'Telangana','37':'Andhra Pradesh','38':'Ladakh','97':'Other Territory'};
-export function stateCodeFromGstin(gstin:string): string | null { const code=gstin.trim().slice(0,2); return /^\d{2}$/.test(code)&&stateCodes[code] ? code : null; }
+export function stateCodeFromGstin(gstin:string): string | null {
+ const normalized=gstin.trim().toUpperCase();
+ const match=normalized.match(/^(\d{2})[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[A-Z0-9]$/);
+ const code=match?.[1];
+ return code&&stateCodes[code]?code:null;
+}
 export function determineGstMode(sellerGstin:string,buyerGstin:string): 'intra'|'inter'|null { const seller=stateCodeFromGstin(sellerGstin),buyer=stateCodeFromGstin(buyerGstin); if(!seller||!buyer)return null; return seller===buyer?'intra':'inter'; }
 export function calculateGstLine(qty:number,rate:number,gstRate:number,intraState:boolean) { const taxable=qty*rate, tax=taxable*gstRate/100; return {taxable,cgst:intraState?tax/2:0,sgst:intraState?tax/2:0,igst:intraState?0:tax,total:taxable+tax}; }
 const ones=['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen']; const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];

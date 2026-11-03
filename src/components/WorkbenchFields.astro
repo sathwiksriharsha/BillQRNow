@@ -1,15 +1,136 @@
 ---
 import type { WorkMode } from '../data/routes';
-const {mode,slug=''}=Astro.props as {mode:WorkMode;slug?:string};
-const isPayroll=slug==='salary-slip-generator'||slug.endsWith('/1099-contractor-invoice-generator');
+import { currencyForRoute } from '../utils/routeCurrency';
+const { mode, slug = '' } = Astro.props as { mode: WorkMode; slug?: string };
+const routeCurrency = currencyForRoute(slug);
+const isPayroll = slug === 'salary-slip-generator' || slug.endsWith('/1099-contractor-invoice-generator');
+const isJewellery = slug === 'jewellery-gst-invoice-generator';
+const isPharmacy = slug === 'medical-pharmacy-bill-generator';
+const isTransport = slug === 'transport-bilty-lr-generator';
+const isFormalLetter = ['experience-certificate-format-generator','relieving-letter-generator','no-objection-certificate-noc-generator'].includes(slug);
+const isRegionalTaxInvoice = ['us/uk-vat-invoice-generator','us/canada-gst-hst-invoice-generator','us/australia-tax-invoice-abn-generator','us/eu-reverse-charge-b2b-invoice'].includes(slug);
 ---
 <div class="fields">
-{mode==='upi-qr'&&<><label>Business name<input data-key="business" autocomplete="organization" /></label><label>UPI ID<input data-key="vpa" /></label><div class="amount-row"><label>Amount (₹)<input data-key="amount" type="number" min="1" step="0.01" /></label><label>Invoice reference<input data-key="reference" /></label></div><label>Payment note<input data-key="note" /></label><div class="pills" aria-label="Bank UPI handles">{['@okaxis','@okicici','@okhdfcbank','@ybl','@paytm'].map(x=><button type="button" class="pill" data-handle={x}>{x}</button>)}</div><label class="check"><input data-key="openAmount" type="checkbox" /> Let the payer enter an amount</label></>}
-{mode==='payment-qr'&&<><label>Business name<input data-key="business" autocomplete="organization" /></label><label>Payment link<input data-key="paymentUrl" type="url" placeholder="https://paypal.me/yourname/amount" /></label><div class="amount-row"><label>Invoice amount (USD)<input data-key="invoiceAmount" type="number" min="0" step="0.01" /></label><label>Invoice reference<input data-key="reference" /></label></div><label>Payment note<input data-key="note" /></label><p class="tax-mode" data-link-status>Enter a Stripe, PayPal, Venmo, Square or Wise HTTPS payment link.</p></>}
-{mode==='gst-invoice'&&<><div class="amount-row"><label>Supplier / seller<input data-key="seller" /></label><label>Invoice number<input data-key="invoice" /></label></div><label>Document type<select data-key="documentType"><option>Tax Invoice</option><option>Quotation</option><option>Proforma Invoice</option><option>Bill of Supply</option><option>Retail Bill</option><option>Purchase Order</option><option>Delivery Challan</option><option>Credit / Debit Note</option></select></label><label>Seller GSTIN<input data-key="sellerGstin" maxlength="15" /></label><label>Buyer / customer<input data-key="buyer" /></label><label>Buyer GSTIN<input data-key="buyerGstin" maxlength="15" /></label><label>UPI ID for payment<input data-key="vpa" /></label><p class="tax-mode" data-tax-mode>Enter both GSTINs to calculate tax type.</p><label>Line items <small>One per line: Description | HSN/SAC | Qty | Rate ₹ | GST %</small><textarea data-key="items" rows="5"></textarea></label></>}
-{mode==='hra-rent'&&<><div class="amount-row"><label>Tenant name<input data-key="tenant" /></label><label>Landlord name<input data-key="landlord" /></label></div><div class="amount-row"><label>Monthly rent (₹)<input data-key="rent" type="number" /></label><label>Landlord PAN<input data-key="pan" /></label></div><label>Rental property address<input data-key="address" /></label><div class="amount-row"><label>Start month<input data-key="start" type="month" /></label><label>End month<input data-key="end" type="month" /></label></div><label>Payment mode<select data-key="payment"><option>UPI</option><option>Bank transfer</option><option>Cash</option><option>Cheque</option></select></label><p class="tax-mode" data-pan-warning>Landlord PAN is required when annual rent exceeds ₹1,00,000.</p></>}
-{mode==='us-customs-b2b'&&<><label>Exporter<input data-key="exporter" /></label><label>Consignee<input data-key="consignee" /></label><div class="amount-row"><label>Carrier<input data-key="carrier" /></label><label>Incoterm<select data-key="incoterm"><option>DDP</option><option>DAP</option><option>FOB</option><option>EXW</option></select></label></div><label>Weight unit<select data-key="weightUnit"><option>kg</option><option>lbs</option></select></label><label>Shipment items<small>Description | HS tariff | Country of origin | Qty | Unit price USD | Net weight | Gross weight</small><textarea data-key="items" rows="5"></textarea></label><label>Package dimensions<input data-key="dimensions" placeholder="e.g. 3 cartons · 40 × 30 × 25 cm" /></label></>}
-{mode==='late-fee'&&<><label>Customer<input data-key="customer" /></label><label>Invoice reference<input data-key="invoice" /></label><div class="amount-row"><label>Past-due amount (USD)<input data-key="principal" type="number" min="0" step="0.01" /></label><label>Annual late-fee rate (%)<input data-key="annualRate" type="number" min="0" step="0.01" /></label></div><label>Days overdue<input data-key="daysLate" type="number" min="0" step="1" /></label><p class="tax-mode" data-late-fee-note>Simple interest, prorated by overdue days.</p></>}
-{mode==='hr-docs'&&isPayroll&&<><div class="amount-row"><label>Employee / contractor<input data-key="employee" /></label><label>Company / client<input data-key="company" /></label></div><label>Pay period<input data-key="period" /></label><div class="amount-row"><label>Basic / services<input data-key="basic" type="number" /></label><label>HRA<input data-key="hra" type="number" /></label></div><div class="amount-row"><label>Allowance<input data-key="allowance" type="number" /></label><label>Deductions / withholding<input data-key="deductions" type="number" /></label></div><label>Payment QR URL (optional)<input data-key="paymentUrl" type="url" placeholder="https://paypal.me/…" /></label></>}
-{mode==='hr-docs'&&!isPayroll&&<><label>Business / issuer<input data-key="company" /></label><label>Customer / recipient<input data-key="employee" /></label><label>Document reference or period<input data-key="period" /></label><div class="amount-row"><label>Amount ({slug.startsWith('us/')?'USD':'₹'})<input data-key="amount" type="number" min="0" step="0.01" /></label><label>Line description<input data-key="allowance" /></label></div><label>Payment QR URL (optional)<input data-key="paymentUrl" type="url" placeholder="https://paypal.me/…" /></label></>}
+  {mode === 'upi-qr' && <>
+    <label>Business name<input data-key="business" autocomplete="organization" /></label>
+    <label>UPI ID<input data-key="vpa" placeholder="merchant@okicici" /></label>
+    <div class="amount-row"><label>Amount (₹)<input data-key="amount" type="number" min="1" step="0.01" /></label><label>Invoice reference<input data-key="reference" /></label></div>
+    <label>Payment note<input data-key="note" /></label>
+    <div class="pills" aria-label="Bank UPI handles">{['@okaxis','@okicici','@okhdfcbank','@oksbi','@ybl','@paytm','@ibl','@upi'].map(handle => <button type="button" class="pill" data-handle={handle}>{handle}</button>)}</div>
+    <label class="check"><input data-key="openAmount" type="checkbox" /> Let the payer enter an amount</label>
+  </>}
+
+  {mode === 'payment-qr' && <>
+    <label>Business name<input data-key="business" autocomplete="organization" /></label>
+    <label>Payment link<input data-key="paymentUrl" type="url" placeholder="https://paypal.me/yourname/amount" /></label>
+    <div class="amount-row"><label>Invoice amount (USD)<input data-key="invoiceAmount" type="number" min="0" step="0.01" /></label><label>Invoice reference<input data-key="reference" /></label></div>
+    <label>Payment note<input data-key="note" /></label>
+    <p class="tax-mode" data-link-status>Enter a Stripe, PayPal, Venmo, Square or Wise HTTPS payment link.</p>
+  </>}
+
+  {mode === 'gst-invoice' && isJewellery && <>
+    <div class="amount-row"><label>Jeweller / seller<input data-key="seller" /></label><label>Invoice number<input data-key="invoice" /></label></div>
+    <label>Customer name<input data-key="buyer" /></label>
+    <div class="amount-row"><label>Seller GSTIN<input data-key="sellerGstin" maxlength="15" /></label><label>Buyer GSTIN<input data-key="buyerGstin" maxlength="15" /></label></div>
+    <label>Metal purity<select data-key="metalPurity"><option>22K</option><option>24K</option><option>18K</option><option>Silver</option></select></label>
+    <div class="amount-row"><label>Gross weight (g)<input data-key="grossWeight" type="number" min="0" step="0.001" /></label><label>Net weight (g)<input data-key="netWeight" type="number" min="0" step="0.001" /></label></div>
+    <div class="amount-row"><label>Rate per gram (₹)<input data-key="ratePerGram" type="number" min="0" step="0.01" /></label><label>Making charges (₹)<input data-key="makingCharges" type="number" min="0" step="0.01" /></label></div>
+    <label>Separate qualifying job-work charges (₹, optional)<input data-key="jobWorkCharges" type="number" min="0" step="0.01" /></label>
+    <label>UPI ID for payment<input data-key="vpa" /></label>
+    <p class="tax-mode">Retail jewellery GST is generally 3% on the total value including making charges. Qualifying job-work charges are treated separately at 5%.</p>
+  </>}
+
+  {mode === 'gst-invoice' && isPharmacy && <>
+    <div class="amount-row"><label>Pharmacy name<input data-key="seller" /></label><label>Bill number<input data-key="invoice" /></label></div>
+    <div class="amount-row"><label>Patient name<input data-key="patientName" /></label><label>Prescribing doctor name<input data-key="doctorName" /></label></div>
+    <label>Drug Licence (DL) No.<input data-key="drugLicense" /></label>
+    <div class="amount-row"><label>Medicine name<input data-key="medicineName" /></label><label>Batch No.<input data-key="batchNumber" /></label></div>
+    <div class="amount-row"><label>Expiry date (MM/YY)<input data-key="expiryDate" placeholder="MM/YY" pattern="(0[1-9]|1[0-2])/[0-9]{2}" /></label><label>HSN<input data-key="medicineHsn" value="3004" /></label></div>
+    <div class="amount-row"><label>Quantity<input data-key="medicineQty" type="number" min="1" step="1" /></label><label>MRP (₹)<input data-key="mrp" type="number" min="0" step="0.01" /></label></div>
+    <label>GST rate (%)<select data-key="gstRate"><option>5</option><option>12</option><option>18</option><option>0</option></select></label>
+  </>}
+
+  {mode === 'gst-invoice' && isTransport && <>
+    <div class="amount-row"><label>LR / Bilty No.<input data-key="lrNumber" /></label><label>Truck / Vehicle RC No.<input data-key="truckNo" /></label></div>
+    <label>E-Way Bill No. (12 digits)<input data-key="ewayBillNo" inputmode="numeric" maxlength="12" pattern="[0-9]{12}" /></label>
+    <div class="amount-row"><label>From station (loading)<input data-key="fromCity" /></label><label>To station (unloading)<input data-key="toCity" /></label></div>
+    <div class="amount-row"><label>Driver name<input data-key="driverName" /></label><label>Driver mobile<input data-key="driverMobile" inputmode="tel" /></label></div>
+    <label>Freight payment status<select data-key="freightStatus"><option>Paid</option><option>To Pay</option><option>To Be Billed</option></select></label>
+    <div class="amount-row"><label>Actual weight (kg / MT)<input data-key="actualWeight" type="number" min="0" step="0.01" /></label><label>Charged weight (kg / MT)<input data-key="chargedWeight" type="number" min="0" step="0.01" /></label></div>
+    <label>Insurance / risk clause<select data-key="riskClause"><option>At Owner's Risk</option><option>At Carrier's Risk</option></select></label>
+    <label class="check"><input data-key="copySet" type="checkbox" checked /> Print all three copies (Consignor, Consignee, Driver / Transporter)</label>
+  </>}
+
+  {mode === 'gst-invoice' && !isJewellery && !isPharmacy && !isTransport && <>
+    <div class="amount-row"><label>Supplier / seller<input data-key="seller" /></label><label>Invoice number<input data-key="invoice" /></label></div>
+    <label>Document type<select data-key="documentType"><option>Tax Invoice</option><option>Quotation</option><option>Proforma Invoice</option><option>Bill of Supply</option><option>Purchase Order</option><option>Delivery Challan</option><option>Credit / Debit Note</option><option>Retail Bill</option></select></label>
+    <label>Seller GSTIN<input data-key="sellerGstin" maxlength="15" /></label>
+    <label>Buyer / customer<input data-key="buyer" /></label>
+    <label>Buyer GSTIN<input data-key="buyerGstin" maxlength="15" /></label>
+    <label>UPI ID for payment<input data-key="vpa" /></label>
+    <p class="tax-mode" data-tax-mode>Enter both GSTINs to calculate tax type.</p>
+    <label>Line items <small>One per line: Description | HSN/SAC | Qty | Rate ₹ | GST %</small><textarea data-key="items" rows="5"></textarea></label>
+  </>}
+
+  {mode === 'hra-rent' && <>
+    <div class="amount-row"><label>Tenant name<input data-key="tenant" /></label><label>Landlord name<input data-key="landlord" /></label></div>
+    <div class="amount-row"><label>Monthly rent (₹)<input data-key="rent" type="number" /></label><label>Landlord PAN<input data-key="pan" /></label></div>
+    <label>Rental property address<input data-key="address" /></label>
+    <div class="amount-row"><label>Start month<input data-key="start" type="month" /></label><label>End month<input data-key="end" type="month" /></label></div>
+    <label>Payment mode<select data-key="payment"><option>UPI</option><option>Bank transfer</option><option>Cash</option><option>Cheque</option></select></label>
+    <p class="tax-mode" data-pan-warning>Landlord PAN is required when annual rent exceeds ₹1,00,000.</p>
+  </>}
+
+  {mode === 'us-customs-b2b' && <>
+    <label>Exporter<input data-key="exporter" /></label><label>Consignee<input data-key="consignee" /></label>
+    <div class="amount-row"><label>Carrier<input data-key="carrier" /></label><label>Incoterm<select data-key="incoterm"><option>DDP</option><option>DAP</option><option>FOB</option><option>EXW</option><option>CIF</option></select></label></div>
+    <label>Weight unit<select data-key="weightUnit"><option>kg</option><option>lbs</option></select></label>
+    <label>Shipment items<small>Description | HS tariff | Country of origin | Qty | Unit price USD | Net weight | Gross weight</small><textarea data-key="items" rows="5"></textarea></label>
+    <label>Package dimensions<input data-key="dimensions" placeholder="e.g. 3 cartons · 40 × 30 × 25 cm" /></label>
+  </>}
+
+  {mode === 'late-fee' && <>
+    <label>Customer<input data-key="customer" /></label><label>Invoice reference<input data-key="invoice" /></label>
+    <div class="amount-row"><label>Past-due amount (USD)<input data-key="principal" type="number" min="0" step="0.01" /></label><label>Annual late-fee rate (%)<input data-key="annualRate" type="number" min="0" step="0.01" /></label></div>
+    <label>Days overdue<input data-key="daysLate" type="number" min="0" step="1" /></label><p class="tax-mode" data-late-fee-note>Simple interest, prorated by overdue days.</p>
+  </>}
+
+  {mode === 'hr-docs' && isFormalLetter && <>
+    <label>Organization / issuer name and address<input data-key="company" /></label>
+    <div class="amount-row"><label>Employee name<input data-key="employeeName" /></label><label>Designation / role<input data-key="designation" /></label></div>
+    <div class="amount-row"><label>Joining date<input data-key="joinDate" type="date" /></label><label>Last working date<input data-key="lastWorkingDate" type="date" /></label></div>
+    <label>Editable letter body<textarea data-key="letterBody" rows="6" placeholder="Write the employment statement for this letter."></textarea></label>
+    <div class="amount-row"><label>Signatory name<input data-key="signatoryName" /></label><label>Signatory designation<input data-key="signatoryTitle" /></label></div>
+    <label>Reference number<input data-key="period" /></label>
+  </>}
+
+  {mode === 'hr-docs' && isPayroll && <>
+    <div class="amount-row"><label>Employee / contractor<input data-key="employee" /></label><label>Company / client<input data-key="company" /></label></div>
+    <label>Pay period<input data-key="period" /></label>
+    <div class="amount-row"><label>Basic / services<input data-key="basic" type="number" /></label><label>HRA<input data-key="hra" type="number" /></label></div>
+    <div class="amount-row"><label>Allowance<input data-key="allowance" type="number" /></label><label>Deductions / withholding<input data-key="deductions" type="number" /></label></div>
+    <label>Payment QR URL (optional)<input data-key="paymentUrl" type="url" placeholder="https://paypal.me/…" /></label>
+  </>}
+
+  {mode === 'hr-docs' && isRegionalTaxInvoice && <>
+    <div class="amount-row"><label>Seller / business name<input data-key="company" /></label><label>Invoice number<input data-key="invoice" /></label></div>
+    <label>Seller tax registration number<input data-key="sellerTaxId" /></label>
+    <div class="amount-row"><label>Buyer / customer name<input data-key="employee" /></label><label>Buyer tax registration number<input data-key="buyerTaxId" /></label></div>
+    <label>Invoice date<input data-key="period" type="date" /></label>
+    <label>Taxable line items<small>Description | Qty | Unit price ({routeCurrency}) | Tax rate %</small><textarea data-key="items" rows="5"></textarea></label>
+    <label>Payment link for optional QR<input data-key="paymentUrl" type="url" placeholder="https://checkout.stripe.com/…" /></label>
+    <p class="tax-mode">Enter a separate tax rate for each line. Check the rate and registration details for the place of supply before issuing.</p>
+  </>}
+
+  {mode === 'hr-docs' && !isPayroll && !isFormalLetter && !isRegionalTaxInvoice && <>
+    <label>Business / issuer<input data-key="company" /></label><label>Customer / recipient<input data-key="employee" /></label><label>Document reference or period<input data-key="period" /></label>
+    <div class="amount-row"><label>Amount ({routeCurrency})<input data-key="amount" type="number" min="0" step="0.01" /></label><label>Line description<input data-key="allowance" /></label></div>
+    <label>Payment QR URL (optional)<input data-key="paymentUrl" type="url" placeholder="https://paypal.me/…" /></label>
+  </>}
+
+  <div class="asset-uploads">
+    <label>Business logo (optional)<input data-key="logoFile" type="file" accept="image/png,image/jpeg" /></label>
+    <label>Authorized signature (optional)<input data-key="signatureFile" type="file" accept="image/png,image/jpeg" /></label>
+    <small>Images are processed in this browser and embedded in your PDF. Nothing is uploaded.</small>
+  </div>
 </div>

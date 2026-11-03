@@ -8,4 +8,11 @@ export function buildUpiUri(input: {vpa:string; payeeName:string; amount?:number
   query.set('cu','INR'); if (input.note?.trim()) query.set('tn',input.note.trim());
   return `upi://pay?${query.toString()}`;
 }
-export function isValidPaymentLink(url: string): boolean { try { const u=new URL(url); return u.protocol==='https:' && /stripe|paypal|venmo|square|wise/i.test(u.hostname); } catch { return false; } }
+const paymentLinkDomains = ['stripe.com','paypal.com','paypal.me','venmo.com','square.link','squareup.com','square.site','wise.com'];
+export function isValidPaymentLink(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase().replace(/\.$/, '');
+    return parsed.protocol === 'https:' && paymentLinkDomains.some(domain => host === domain || host.endsWith(`.${domain}`));
+  } catch { return false; }
+}

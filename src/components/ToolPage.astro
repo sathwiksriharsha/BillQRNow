@@ -2,15 +2,96 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import BillWorkbench from './BillWorkbench.astro';
 import RouteReferenceTools from './RouteReferenceTools.astro';
-import type { RoutePage } from '../data/routes';
+import { relatedFor, type RoutePage } from '../data/routes';
+import { siteUrl } from '../config/site';
+
 const { page } = Astro.props as { page: RoutePage };
 const path = `/${page.slug}`;
+const related = relatedFor(page);
+const safeJson = (value: unknown) => JSON.stringify(value).replaceAll('<', '\\u003c');
+const applicationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: page.headline,
+  url: `${siteUrl}${path}`,
+  applicationCategory: page.category,
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0.00', priceCurrency: 'INR' },
+  description: page.description
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
+    { '@type': 'ListItem', position: 2, name: page.category, item: `${siteUrl}/all-tools` },
+    { '@type': 'ListItem', position: 3, name: page.headline, item: `${siteUrl}${path}` }
+  ]
+};
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: page.faqs.map(faq => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: { '@type': 'Answer', text: faq.answer }
+  }))
+};
 ---
 <SiteLayout title={page.title} description={page.description} path={path}>
-  <main><section class="tool-hero"><div class="hero-copy"><span class="eyebrow">{page.category} · Free browser tool</span><h1>{page.headline}</h1><p>{page.intro}</p><div class="hero-points"><span>Free to use</span><span>PDF ready to print</span><span>No account required</span></div></div><div class="hero-art" aria-label="Preview of a print-ready document"><div class="receipt-sheet"><div class="sheet-brand">BILLQRNOW</div><div class="sheet-heading">{page.mode==='upi-qr'?'PAYMENT QR':page.mode==='hra-rent'?'RENT RECEIPT':page.mode==='us-customs-b2b'?'CUSTOMS FORM':page.mode==='hr-docs'?'PAY SLIP':'TAX INVOICE'}</div><div class="sheet-line long"></div><div class="sheet-line"></div><div class="sheet-line short"></div><div class="sheet-total"><span>TOTAL</span><b>₹ 4,350.00</b></div><div class="sheet-code">□ ▦ ▧ ▦ □</div></div></div></section>
-  <div class="switchbar"><strong>Popular tools</strong><a href="/upi-qr-code-generator">UPI QR generator</a><a href="/gst-invoice-generator">GST invoice</a><a href="/hra-rent-receipt-generator">HRA rent receipts</a><a href="/salary-slip-generator">Salary slip</a><a href="/us/commercial-invoice-generator">Commercial invoice</a><a href="/us/packing-list-generator">Packing list</a></div>
-  <RouteReferenceTools slug={page.slug}/>
-  <BillWorkbench page={page}/>
-  <section class="how-section"><div><span class="eyebrow">A straightforward workflow</span><h2>From details to a document in minutes</h2></div><div class="how-copy"><p>Enter the information you already have. The preview updates as you work, and the finished PDF is generated on your device.</p><p>For records and compliance, check the final document against your own requirements before issuing or submitting it.</p></div></section>
-  <section class="related-section"><h2>More free tools</h2><div class="related-links">{['upi-qr-code-generator','gst-invoice-generator','hra-rent-receipt-generator','salary-slip-generator','us/commercial-invoice-generator','us/packing-list-generator'].filter(x=>x!==page.slug).slice(0,4).map(x=><a href={`/${x}`}>{x.split('/').pop()?.replaceAll('-',' ') } <span>↗</span></a>)}</div></section></main>
+  <script type="application/ld+json" set:html={safeJson(applicationSchema)}></script>
+  <script type="application/ld+json" set:html={safeJson(breadcrumbSchema)}></script>
+  <script type="application/ld+json" set:html={safeJson(faqSchema)}></script>
+  <main>
+    <section class="tool-hero">
+      <div class="hero-copy">
+        <span class="eyebrow">{page.category} · Free browser tool</span>
+        <h1>{page.headline}</h1>
+        <p>{page.intro}</p>
+        <div class="hero-points"><span>Free to use</span><span>PDF ready to print</span><span>No account required</span></div>
+      </div>
+    </section>
+    <nav class="switchbar" aria-label="Popular tools">
+      <strong>Popular tools</strong>
+      <a href="/upi-qr-code-generator">UPI QR generator</a>
+      <a href="/gst-invoice-generator">GST invoice</a>
+      <a href="/hra-rent-receipt-generator">HRA rent receipts</a>
+      <a href="/salary-slip-generator">Salary slip</a>
+      <a href="/us/commercial-invoice-generator">Commercial invoice</a>
+      <a href="/us/packing-list-generator">Packing list</a>
+    </nav>
+
+    <BillWorkbench page={page}/>
+
+    <section class="related-section" data-related-tools={page.slug} aria-labelledby="related-title">
+      <span class="eyebrow">Keep the paperwork connected</span>
+      <h2 id="related-title">Related Compliance Tools</h2>
+      <div class="related-links">
+        {related.map(route => <a href={`/${route.slug}`}><span>{route.headline}</span><b aria-hidden="true">↗</b></a>)}
+      </div>
+    </section>
+
+    <section class="compliance-section" aria-labelledby="compliance-title">
+      <span class="eyebrow">Quick reference</span>
+      <h2 id="compliance-title">{page.headline}: key document details</h2>
+      <table data-route-compliance={page.slug}>
+        <thead><tr><th scope="col">Specification</th><th scope="col">Details</th></tr></thead>
+        <tbody>{page.complianceRows.map(row => <tr><th scope="row">{row.label}</th><td>{row.value}</td></tr>)}</tbody>
+      </table>
+    </section>
+
+    <RouteReferenceTools slug={page.slug}/>
+
+    <section class="faq-section" aria-labelledby="faq-title">
+      <span class="eyebrow">Common questions</span>
+      <h2 id="faq-title">FAQs about {page.headline}</h2>
+      <div class="faq-list">
+        {page.faqs.map((faq, index) => <details data-faq-item={index + 1}><summary>{faq.question}</summary><p>{faq.answer}</p></details>)}
+      </div>
+    </section>
+    <section class="how-section">
+      <div><span class="eyebrow">A straightforward workflow</span><h2>From details to a document in minutes</h2></div>
+      <div class="how-copy"><p>Enter the information you already have. The preview updates as you work, and the finished PDF is generated on your device.</p><p>For records and compliance, check the final document against your own requirements before issuing it.</p></div>
+    </section>
+  </main>
 </SiteLayout>
