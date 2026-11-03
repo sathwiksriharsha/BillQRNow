@@ -7,11 +7,45 @@ function htmlFiles(dir:string):string[]{return readdirSync(dir,{withFileTypes:tr
 const files=existsSync(dist)?htmlFiles(dist):[];
 const text=(file:string)=>readFileSync(file,'utf8');
 const attr=(html:string,pattern:RegExp)=>html.match(pattern)?.[1]||'';
+const decodeEntities=(value:string)=>value.replace(/&#38;|&amp;/g,'&').replace(/&#39;|&#x27;/g,"'").replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 function outputFor(pathname:string){const clean=decodeURIComponent(pathname.split(/[?#]/)[0]).replace(/^\/+|\/+$/g,'');return clean?join(dist,clean,'index.html'):join(dist,'index.html');}
 describe('built SEO and privacy surface',()=>{
  it('contains Cloudflare and sitemap artifacts at the canonical host',()=>{for(const name of ['sitemap-index.xml','sitemap-0.xml','robots.txt','_headers','_redirects'])expect(existsSync(join(dist,name)),`${name} should be in dist`).toBe(true);const sitemap=text(join(dist,'sitemap-0.xml'));expect(sitemap).toContain('https://billqrnow.pages.dev/');expect(text(join(dist,'robots.txt'))).toContain('https://billqrnow.pages.dev/sitemap-index.xml');});
  it('builds at least 66 pages and keeps every route slug dot-free',()=>{expect(files.length).toBeGreaterThanOrEqual(66);expect(routes).toHaveLength(60);for(const route of routes)expect(route.slug).not.toContain('.');});
  it('uses unique titles, descriptions, canonicals, and exactly one H1 on every page',()=>{const titles:string[]=[],descriptions:string[]=[];for(const file of files){const html=text(file);titles.push(attr(html,/<title>(.*?)<\/title>/i));descriptions.push(attr(html,/<meta\s+name="description"\s+content="([^"]*)"/i));const canon=attr(html,/<link\s+rel="canonical"\s+href="([^"]*)"/i);expect(canon).toMatch(/^https:\/\/billqrnow\.pages\.dev\//);expect((html.match(/<h1(?:\s[^>]*)?>/gi)||[]).length,relative(dist,file)).toBe(1);}expect(titles.every(Boolean)).toBe(true);expect(descriptions.every(Boolean)).toBe(true);expect(new Set(titles).size).toBe(files.length);expect(new Set(descriptions).size).toBe(files.length);});
+ it('includes matching Open Graph and Twitter card metadata on every page',()=>{
+  for(const file of files){
+   const html=text(file),page=relative(dist,file);
+   const title=decodeEntities(attr(html,/<title>(.*?)<\/title>/i));
+   const description=decodeEntities(attr(html,/<meta\s+name="description"\s+content="([^"]*)"/i));
+   const canonical=attr(html,/<link\s+rel="canonical"\s+href="([^"]*)"/i);
+   expect(attr(html,/<meta\s+property="og:type"\s+content="([^"]*)"/i),page).toBe('website');
+   expect(attr(html,/<meta\s+property="og:site_name"\s+content="([^"]*)"/i),page).toBe('BillQRNow');
+   expect(decodeEntities(attr(html,/<meta\s+property="og:title"\s+content="([^"]*)"/i)),page).toBe(title);
+   expect(decodeEntities(attr(html,/<meta\s+property="og:description"\s+content="([^"]*)"/i)),page).toBe(description);
+   expect(attr(html,/<meta\s+property="og:url"\s+content="([^"]*)"/i),page).toBe(canonical);
+   expect(attr(html,/<meta\s+name="twitter:card"\s+content="([^"]*)"/i),page).toBe('summary_large_image');
+   expect(decodeEntities(attr(html,/<meta\s+name="twitter:title"\s+content="([^"]*)"/i)),page).toBe(title);
+   expect(decodeEntities(attr(html,/<meta\s+name="twitter:description"\s+content="([^"]*)"/i)),page).toBe(description);
+  }
+ });
+ it('keeps every title within 75 characters and avoids repeated benefit words',()=>{
+  for(const file of files){
+   const title=attr(text(file),/<title>(.*?)<\/title>/i),page=relative(dist,file);
+   expect(title.length,`${page}: ${title}`).toBeLessThanOrEqual(75);
+   expect(title, page).toMatch(/\| BillQRNow$/);
+   expect(title).not.toMatch(/Amount Fixed\s+—\s+Amount Fixed/i);
+   expect(title).not.toMatch(/UPI QR Code\s+—\s+Embedded UPI QR/i);
+   const noBrand=title.replace(/\s*\| BillQRNow$/,'').replace(/\s*\(Free, No Login\)$/,'');
+   const split=noBrand.split(' — ');
+   if(split.length===2){
+    const words=(part:string)=>part.toLowerCase().match(/[a-z0-9]+/g)||[];
+    const primary=new Set(words(split[0]));
+    const benefit=words(split[1]);
+    expect(benefit.filter(word=>primary.has(word)),`${page}: ${title}`).toEqual([]);
+   }
+  }
+ });
  it('has no broken root-relative internal links across built pages',()=>{const broken:string[]=[];for(const file of files){const html=text(file);for(const match of html.matchAll(/<a\b[^>]*\bhref="(\/[^"#]*)"/gi)){const href=match[1];if(!existsSync(outputFor(href)))broken.push(`${relative(dist,file)} -> ${href}`);}}expect(broken).toEqual([]);});
  it('does not render forms that post financial data to a remote server',()=>{for(const file of files){const html=text(file);for(const match of html.matchAll(/<form\b([^>]*)>/gi)){const attrs=match[1];expect(attrs).not.toMatch(/method=["']?post/i);expect(attrs).not.toMatch(/action=["']https?:\/\//i);}}});
  it('renders route-specific compliance tables, four FAQs, and valid SoftwareApplication, FAQPage, and BreadcrumbList JSON-LD',()=>{
@@ -64,8 +98,7 @@ describe('built SEO and privacy surface',()=>{
   const canada=text(outputFor('/us/canada-gst-hst-invoice-generator'));
   expect(canada).toContain('Nova Scotia is 14% from April 1, 2025');
  });
- it('uses the high-CTR title pattern and renders all eight UPI handles and client-side image inputs',()=>{
-  for(const file of files){const html=text(file),title=attr(html,/<title>(.*?)<\/title>/i);expect(title,relative(dist,file)).toContain(' — ');expect(title).toContain('(Free, No Login) | BillQRNow');}
+ it('renders all eight UPI handles and client-side image inputs',()=>{
   for(const route of routes){const html=text(outputFor(`/${route.slug}`));expect(html).toContain('data-key="logoFile"');expect(html).toContain('data-key="signatureFile"');}
   const upi=text(outputFor('/upi-qr-code-generator'));
   for(const handle of ['@okaxis','@okicici','@okhdfcbank','@oksbi','@ybl','@paytm','@ibl','@upi'])expect(upi).toContain(`data-handle="${handle}"`);

@@ -32,6 +32,42 @@ const titleBenefit = (slug: string, mode: WorkMode) => {
   return 'Editable, Print-Ready Document';
 };
 
+const makeSeoTitle = (slug: string) => {
+  const custom: Record<string, string> = {
+    'upi-qr-code-generator': 'Dynamic UPI QR Generator with Fixed Amount (Free, No Login) | BillQRNow',
+    'gst-invoice-generator': 'Free GST Invoice Generator PDF — Auto CGST/IGST & UPI QR | BillQRNow',
+    'hra-rent-receipt-generator': 'HRA Rent Receipt Generator PDF — All 12 Months (Free, No Login) | BillQRNow',
+    'salary-slip-generator': 'Salary Slip PDF Generator (Free, No Login) | BillQRNow',
+    'us/commercial-invoice-generator': 'Commercial Invoice & Packing List PDF (Free, No Login) | BillQRNow',
+    'us/packing-list-generator': 'Packing List PDF Generator (Free, No Login) | BillQRNow',
+    'us/commercial-invoice-and-packing-list': 'Combined Invoice & Packing List PDF (Free, No Login) | BillQRNow',
+    'us/uk-vat-invoice-generator': 'UK VAT Invoice Generator (Free PDF) | BillQRNow',
+    'us/canada-gst-hst-invoice-generator': 'Canada GST/HST Invoice Generator (Free PDF) | BillQRNow',
+    'us/australia-tax-invoice-abn-generator': 'Australia ABN Tax Invoice Generator (Free PDF) | BillQRNow',
+    'us/eu-reverse-charge-b2b-invoice': 'EU Reverse Charge VAT Invoice (Free PDF) | BillQRNow'
+  };
+  if (custom[slug]) return custom[slug];
+
+  const acronyms: Record<string, string> = {
+    abn: 'ABN', b2b: 'B2B', cgst: 'CGST', dhl: 'DHL', eu: 'EU', fedex: 'FedEx', gst: 'GST',
+    hsn: 'HSN', hst: 'HST', igst: 'IGST', kg: 'KG', km: 'KM', lr: 'LR', lta: 'LTA', ngo: 'NGO',
+    noc: 'NOC', opd: 'OPD', pdf: 'PDF', po: 'PO', pst: 'PST', qr: 'QR', rwa: 'RWA', sac: 'SAC',
+    uk: 'UK', upi: 'UPI', ups: 'UPS', usps: 'USPS', vat: 'VAT'
+  };
+  const isUsRoute = slug.startsWith('us/');
+  const words = slug.replace(/^us\//, '').split('-').filter(Boolean);
+  const removable = ['international', 'independent', 'personal', 'commercial', 'business', 'generator', 'maker', 'format', 'online', 'template', 'pdf'];
+  const render = () => words.map(word => acronyms[word] || `${word[0].toUpperCase()}${word.slice(1)}`).join(' ');
+  const suffix = ' (Free, No Login) | BillQRNow';
+  const maxPrimaryLength = 75 - suffix.length - (isUsRoute ? 3 : 0);
+  for (const word of removable) {
+    while (render().length > maxPrimaryLength && words.includes(word) && words.length > 2) words.splice(words.indexOf(word), 1);
+  }
+  while (render().length > maxPrimaryLength && words.length > 2) words.pop();
+  const primary = `${isUsRoute ? 'US ' : ''}${render()}`;
+  return `${primary}${suffix}`;
+};
+
 const complianceFor = (slug: string, primary: string, mode: WorkMode): ComplianceRow[] => {
   const exact: Record<string, ComplianceRow[]> = {
     'jewellery-gst-invoice-generator': [
@@ -425,7 +461,7 @@ const make = (rows: string[][], prefix = ''): RoutePage[] => rows.map(([slug,tit
   const workMode = mode as WorkMode;
   const headline = title.replace(/ \([^)]*\)/g, '');
   const benefit = titleBenefit(fullSlug, workMode);
-  const titleTag = `${headline} — ${benefit} (Free, No Login) | BillQRNow`;
+  const titleTag = makeSeoTitle(fullSlug);
   return {
     slug: fullSlug,
     title: titleTag,
@@ -454,11 +490,11 @@ export const relatedFor = (page: RoutePage) => {
   return related.slice(0, 6);
 };
 export const corePages = [
-{slug:'about',title:'About BillQRNow — Private Browser-Based Billing Tools (Free, No Login) | BillQRNow',description:'Learn about BillQRNow’s private, browser-based billing tools.'},
-{slug:'contact',title:'Contact BillQRNow — Billing Tool Help (Free, No Login) | BillQRNow',description:'Contact the BillQRNow team with questions or feedback.'},
-{slug:'privacy',title:'BillQRNow Privacy Policy — Data Stays in Your Browser (Free, No Login) | BillQRNow',description:'How BillQRNow protects your information with local processing.'},
-{slug:'terms',title:'BillQRNow Terms of Use — Free Browser-Based Documents (Free, No Login) | BillQRNow',description:'Terms for using BillQRNow document generators.'},
-{slug:'all-tools',title:'Free Invoice, QR & Receipt Tools — Browse All 60 Tools (Free, No Login) | BillQRNow',description:'Browse every free BillQRNow invoice, UPI QR and receipt tool.'}
+{slug:'about',title:'About BillQRNow — Private Billing Tools | BillQRNow',description:'Learn about BillQRNow’s private, browser-based billing tools.'},
+{slug:'contact',title:'Contact BillQRNow — Tool Help | BillQRNow',description:'Contact the BillQRNow team with questions or feedback.'},
+{slug:'privacy',title:'BillQRNow Privacy Policy — Private Browser Tools | BillQRNow',description:'How BillQRNow protects your information with local processing.'},
+{slug:'terms',title:'BillQRNow Terms of Use | BillQRNow',description:'Terms for using BillQRNow document generators.'},
+{slug:'all-tools',title:'Free Invoice, QR & Receipt Tools — All 60 | BillQRNow',description:'Browse every free BillQRNow invoice, UPI QR and receipt tool.'}
 ];
 export const getRoute = (slug: string) => routes.find(r => r.slug === slug);
 

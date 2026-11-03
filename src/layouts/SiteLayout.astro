@@ -2,9 +2,9 @@
 import { siteName, siteUrl } from '../config/site';
 import '../styles/global.css';
 const { title, description, path='/' } = Astro.props;
-const canonical = `${siteUrl}${path}`;
+const canonicalUrl = `${siteUrl}${path}`;
 ---
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#f6f8f4"/><meta name="description" content={description}/><link rel="canonical" href={canonical}/><link rel="icon" type="image/png" sizes="128x128" href="/favicon.png"/><title>{title}</title></head><body>
+<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#f6f8f4"/><meta name="description" content={description}/><link rel="canonical" href={canonicalUrl}/><link rel="icon" type="image/png" sizes="128x128" href="/favicon.png"/><meta property="og:type" content="website"/><meta property="og:site_name" content={siteName}/><meta property="og:title" content={title}/><meta property="og:description" content={description}/><meta property="og:url" content={canonicalUrl}/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content={title}/><meta name="twitter:description" content={description}/><title>{title}</title></head><body>
 <header class="site-header">
   <a class="wordmark" href="/" aria-label="BillQRNow home"><img class="wordmark-icon" src="/favicon.png" alt="" width="32" height="32" />BillQRNow</a>
   <nav class="desktop-nav" aria-label="Main navigation">
